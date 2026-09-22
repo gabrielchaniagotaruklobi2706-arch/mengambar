@@ -31,8 +31,11 @@ function getAI(): GoogleGenAI | null {
   return aiClient;
 }
 
+// Router for API endpoints - mounted at both /api and / to support Vercel serverless rewrites and standalone server
+const apiRouter = express.Router();
+
 // Health check endpoint
-app.get("/api/health", (req, res) => {
+apiRouter.get("/health", (req, res) => {
   res.json({
     status: "ok",
     hasApiKey: Boolean(process.env.GEMINI_API_KEY),
@@ -49,7 +52,7 @@ function parseDataUrl(dataUrl: string): { mimeType: string; base64: string } {
 }
 
 // AI: Generate Image from Prompt
-app.post("/api/ai/generate", async (req, res) => {
+apiRouter.post("/ai/generate", async (req, res) => {
   try {
     const { prompt, negativePrompt, style, aspectRatio = "1:1" } = req.body;
 
@@ -123,7 +126,7 @@ app.post("/api/ai/generate", async (req, res) => {
 });
 
 // AI: Sketch to Image
-app.post("/api/ai/sketch-to-image", async (req, res) => {
+apiRouter.post("/ai/sketch-to-image", async (req, res) => {
   try {
     const { sketchDataUrl, prompt, style, aspectRatio = "1:1" } = req.body;
 
@@ -205,7 +208,7 @@ app.post("/api/ai/sketch-to-image", async (req, res) => {
 });
 
 // AI: Edit Image with instruction
-app.post("/api/ai/edit-image", async (req, res) => {
+apiRouter.post("/ai/edit-image", async (req, res) => {
   try {
     const { imageDataUrl, instruction, style } = req.body;
 
@@ -276,6 +279,10 @@ app.post("/api/ai/edit-image", async (req, res) => {
   }
 });
 
+// Mount API router on both /api and / to seamlessly support direct requests and Vercel rewrites
+app.use("/api", apiRouter);
+app.use("/", apiRouter);
+
 async function startServer() {
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
@@ -297,4 +304,11 @@ async function startServer() {
   });
 }
 
-startServer();
+// Only start the listening HTTP server when running standalone (e.g. Docker, Cloud Run, local dev)
+// On Vercel, the app instance is exported for serverless functions
+if (!process.env.VERCEL && process.env.NODE_ENV !== "test") {
+  startServer();
+}
+
+export { app };
+export default app;
