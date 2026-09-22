@@ -1,0 +1,6 @@
+{
+  "name": "AI Drawing Studio",
+  "description": "A modern digital drawing studio with HTML Canvas, multi-layer support, rich drawing tools, and AI-assisted generation, sketch-to-image, and editing.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
